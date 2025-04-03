@@ -3,38 +3,39 @@ import 'package:logger/logger.dart';
 // Configure the logger
 final appLogger = Logger(
   printer: PrettyPrinter(
-    methodCount: 1, // number of method calls to be displayed
-    errorMethodCount: 8, // number of method calls if stacktrace is provided
-    lineLength: 120, // width of the output
+    methodCount: 0, // number of method calls to be displayed
+    errorMethodCount: 5, // number of method calls if stacktrace is provided
+    lineLength: 80, // width of the output
     colors: true, // Colorful log messages
     printEmojis: true, // Print an emoji for each log message
-    printTime: false, // Should each log print contain a timestamp
+    printTime: true, // Should each log print contain a timestamp
   ),
   // You can set the minimum level for logs to be shown
   // level: Level.debug, // Default: Level.verbose
 );
 
-// Convenience functions (optional, but can be nice)
-void logVerbose(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-  appLogger.t(message, error: error, stackTrace: stackTrace);
+// Setup logger function
+void setupLogger() {
+  appLogger.i('Logger initialized');
 }
 
-void logDebug(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+// Convenience functions (optional, but can be nice)
+void logDebug(String message, [dynamic error, StackTrace? stackTrace]) {
   appLogger.d(message, error: error, stackTrace: stackTrace);
 }
 
-void logInfo(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+void logInfo(String message, [dynamic error, StackTrace? stackTrace]) {
   appLogger.i(message, error: error, stackTrace: stackTrace);
 }
 
-void logWarning(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+void logWarning(String message, [dynamic error, StackTrace? stackTrace]) {
   appLogger.w(message, error: error, stackTrace: stackTrace);
 }
 
-void logError(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+void logError(String message, [dynamic error, StackTrace? stackTrace]) {
   appLogger.e(message, error: error, stackTrace: stackTrace);
 }
 
-void logFatal(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-  appLogger.f(message, error: error, stackTrace: stackTrace);
+void logWtf(String message, [dynamic error, StackTrace? stackTrace]) {
+  appLogger.wtf(message, error: error, stackTrace: stackTrace);
 }

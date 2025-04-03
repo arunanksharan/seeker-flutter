@@ -1,31 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:seeker_flutter/config/router.dart';
+import 'package:seeker_flutter/data/blocs/auth/auth_bloc.dart';
+import 'package:seeker_flutter/data/blocs/profile/profile_bloc.dart';
+import 'package:seeker_flutter/data/services/api_client.dart';
+import 'package:seeker_flutter/data/services/auth_service.dart';
+import 'package:seeker_flutter/data/services/profile_service.dart';
 import 'package:seeker_flutter/theme/app_theme.dart';
-import 'package:seeker_flutter/utils/logger.dart'; // Import the logger
+import 'package:seeker_flutter/utils/logger.dart';
 
-void main() {
-  // Optional: Add any necessary initialization here
-  // WidgetsFlutterBinding.ensureInitialized(); 
-  // await Firebase.initializeApp(...); // If using Firebase
-
-  // Setup logging
-  appLogger.i('Application Starting...');
-
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize logger
+  setupLogger();
+  logInfo('Starting Seeker Flutter App');
+  
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp();
+    logInfo('Firebase initialized successfully');
+  } catch (e) {
+    logError('Firebase initialization failed', e);
+  }
+  
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Seeker Flutter App',
-      theme: AppTheme.lightTheme, // Apply the light theme
-      // darkTheme: AppTheme.darkTheme, // Uncomment if you have a dark theme
-      // themeMode: ThemeMode.system, // Or ThemeMode.light, ThemeMode.dark
-      home: const PlaceholderScreen(), // Start with a placeholder screen
-      debugShowCheckedModeBanner: false, // Disable the debug banner
+    // Create API client
+    final apiClient = ApiClient();
+    
+    // Create services
+    final authService = AuthService(apiClient);
+    final profileService = ProfileService(apiClient);
+    
+    // Create blocs
+    final authBloc = AuthBloc(authService: authService);
+    final profileBloc = ProfileBloc(profileService: profileService);
+    
+    // Create router
+    final appRouter = AppRouter(
+      authBloc: authBloc,
+      profileBloc: profileBloc,
+    );
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (context) => authBloc),
+        BlocProvider<ProfileBloc>(create: (context) => profileBloc),
+      ],
+      child: MaterialApp.router(
+        title: 'Seeker',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light, // Default to light theme
+        routerConfig: appRouter.router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

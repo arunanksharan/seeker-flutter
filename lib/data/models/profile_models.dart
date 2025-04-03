@@ -3,8 +3,17 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'profile_models.g.dart';
 
-// --- Enums --- //
+/// User verification status
+enum VerificationStatus {
+  @JsonValue('pending')
+  pending,
+  @JsonValue('verified')
+  verified,
+  @JsonValue('rejected')
+  rejected,
+}
 
+/// Education levels
 enum EducationLevel {
   @JsonValue('10th')
   tenth,
@@ -22,93 +31,76 @@ enum EducationLevel {
   doctorate,
 }
 
-enum Gender {
-  @JsonValue('Male')
-  male,
-  @JsonValue('Female')
-  female,
-  @JsonValue('Other')
-  other,
-}
-
+/// Language proficiency levels
 enum ProficiencyLevel {
-  @JsonValue('Beginner')
-  beginner,
+  @JsonValue('Basic')
+  basic,
   @JsonValue('Intermediate')
   intermediate,
-  @JsonValue('Advanced')
-  advanced,
+  @JsonValue('Fluent')
+  fluent,
   @JsonValue('Native')
   native,
 }
 
-enum VerificationStatus {
-  @JsonValue('Pending')
-  pending,
-  @JsonValue('Verified')
-  verified,
-  @JsonValue('Rejected')
-  rejected,
-}
+/// Seeker profile model
+@JsonSerializable()
+class SeekerProfileModel extends Equatable {
+  final int? id;
+  final PersonalDetailsModel personalDetails;
+  final ContactDetailsModel contactDetails;
+  final EducationDetailsModel? educationDetails;
+  final List<WorkExperienceModel>? workExperience;
+  final List<SkillModel>? skills;
+  final List<LanguageProficiencyModel>? languages;
+  final List<CertificationModel>? certifications;
+  final JobPreferencesModel? jobPreferences;
+  final String? createdAt;
+  final String? updatedAt;
 
-enum JobType {
-  @JsonValue('Full-time')
-  fullTime,
-  @JsonValue('Part-time')
-  partTime,
-  @JsonValue('Contract')
-  contract,
-  @JsonValue('Internship')
-  internship,
-  @JsonValue('Freelance')
-  freelance,
-}
-
-enum WorkLocationType {
-  @JsonValue('Onsite')
-  onsite,
-  @JsonValue('Remote')
-  remote,
-  @JsonValue('Hybrid')
-  hybrid,
-}
-
-// --- Interfaces as Classes --- //
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class AddressModel extends Equatable {
-  final String? street;
-  final String? city;
-  final String? state;
-  final String? postalCode;
-  final String? country;
-  final bool? isCurrent;
-
-  const AddressModel({
-    this.street,
-    this.city,
-    this.state,
-    this.postalCode,
-    this.country,
-    this.isCurrent,
+  const SeekerProfileModel({
+    this.id,
+    required this.personalDetails,
+    required this.contactDetails,
+    this.educationDetails,
+    this.workExperience,
+    this.skills,
+    this.languages,
+    this.certifications,
+    this.jobPreferences,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  factory AddressModel.fromJson(Map<String, dynamic> json) =>
-      _$AddressModelFromJson(json);
-  Map<String, dynamic> toJson() => _$AddressModelToJson(this);
+  factory SeekerProfileModel.fromJson(Map<String, dynamic> json) =>
+      _$SeekerProfileModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SeekerProfileModelToJson(this);
 
   @override
-  List<Object?> get props =>
-      [street, city, state, postalCode, country, isCurrent];
+  List<Object?> get props => [
+        id,
+        personalDetails,
+        contactDetails,
+        educationDetails,
+        workExperience,
+        skills,
+        languages,
+        certifications,
+        jobPreferences,
+        createdAt,
+        updatedAt,
+      ];
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Personal details model
+@JsonSerializable()
 class PersonalDetailsModel extends Equatable {
   final String? name;
   final String? fatherName;
   final String? motherName;
-  final String? gender; // Could use Gender enum if API guarantees values
-  final DateTime? dob; // Use DateTime for dates
+  final String? gender;
+  final DateTime? dob;
   final String? guardianName;
   final String? profilePictureUrl;
 
@@ -124,6 +116,7 @@ class PersonalDetailsModel extends Equatable {
 
   factory PersonalDetailsModel.fromJson(Map<String, dynamic> json) =>
       _$PersonalDetailsModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$PersonalDetailsModelToJson(this);
 
   @override
@@ -136,26 +129,61 @@ class PersonalDetailsModel extends Equatable {
         guardianName,
         profilePictureUrl,
       ];
+      
+  /// Get age from date of birth
+  int? get age {
+    if (dob == null) return null;
+    final today = DateTime.now();
+    int age = today.year - dob!.year;
+    if (today.month < dob!.month ||
+        (today.month == dob!.month && today.day < dob!.day)) {
+      age--;
+    }
+    return age;
+  }
+  
+  /// Create a copy with updated fields
+  PersonalDetailsModel copyWith({
+    String? name,
+    String? fatherName,
+    String? motherName,
+    String? gender,
+    DateTime? dob,
+    String? guardianName,
+    String? profilePictureUrl,
+  }) {
+    return PersonalDetailsModel(
+      name: name ?? this.name,
+      fatherName: fatherName ?? this.fatherName,
+      motherName: motherName ?? this.motherName,
+      gender: gender ?? this.gender,
+      dob: dob ?? this.dob,
+      guardianName: guardianName ?? this.guardianName,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Contact details model
+@JsonSerializable()
 class ContactDetailsModel extends Equatable {
-  final String? primaryMobile;
+  final String primaryMobile;
   final String? secondaryMobile;
   final String? email;
-  final AddressModel? permanentAddress;
   final AddressModel? currentAddress;
+  final AddressModel? permanentAddress;
 
   const ContactDetailsModel({
-    this.primaryMobile,
+    required this.primaryMobile,
     this.secondaryMobile,
     this.email,
-    this.permanentAddress,
     this.currentAddress,
+    this.permanentAddress,
   });
 
   factory ContactDetailsModel.fromJson(Map<String, dynamic> json) =>
       _$ContactDetailsModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$ContactDetailsModelToJson(this);
 
   @override
@@ -163,59 +191,169 @@ class ContactDetailsModel extends Equatable {
         primaryMobile,
         secondaryMobile,
         email,
-        permanentAddress,
         currentAddress,
+        permanentAddress,
       ];
+      
+  /// Create a copy with updated fields
+  ContactDetailsModel copyWith({
+    String? primaryMobile,
+    String? secondaryMobile,
+    String? email,
+    AddressModel? currentAddress,
+    AddressModel? permanentAddress,
+  }) {
+    return ContactDetailsModel(
+      primaryMobile: primaryMobile ?? this.primaryMobile,
+      secondaryMobile: secondaryMobile ?? this.secondaryMobile,
+      email: email ?? this.email,
+      currentAddress: currentAddress ?? this.currentAddress,
+      permanentAddress: permanentAddress ?? this.permanentAddress,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Address model
+@JsonSerializable()
+class AddressModel extends Equatable {
+  final String? street;
+  final String? city;
+  final String? state;
+  final String? postalCode;
+  final String? country;
+  final bool? isCurrent;
+  @JsonKey(name: 'verification_status')
+  final VerificationStatus? verificationStatus;
+
+  const AddressModel({
+    this.street,
+    this.city,
+    this.state,
+    this.postalCode,
+    this.country,
+    this.isCurrent,
+    this.verificationStatus,
+  });
+
+  factory AddressModel.fromJson(Map<String, dynamic> json) =>
+      _$AddressModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AddressModelToJson(this);
+
+  @override
+  List<Object?> get props => [
+        street,
+        city,
+        state,
+        postalCode,
+        country,
+        isCurrent,
+        verificationStatus,
+      ];
+      
+  /// Get formatted address
+  String get formattedAddress {
+    final parts = <String>[];
+    if (street != null && street!.isNotEmpty) parts.add(street!);
+    if (city != null && city!.isNotEmpty) parts.add(city!);
+    if (state != null && state!.isNotEmpty) parts.add(state!);
+    if (postalCode != null && postalCode!.isNotEmpty) parts.add(postalCode!);
+    if (country != null && country!.isNotEmpty) parts.add(country!);
+    
+    return parts.join(', ');
+  }
+  
+  /// Create a copy with updated fields
+  AddressModel copyWith({
+    String? street,
+    String? city,
+    String? state,
+    String? postalCode,
+    String? country,
+    bool? isCurrent,
+    VerificationStatus? verificationStatus,
+  }) {
+    return AddressModel(
+      street: street ?? this.street,
+      city: city ?? this.city,
+      state: state ?? this.state,
+      postalCode: postalCode ?? this.postalCode,
+      country: country ?? this.country,
+      isCurrent: isCurrent ?? this.isCurrent,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+    );
+  }
+}
+
+/// Education detail model for individual education entries
+@JsonSerializable()
 class EducationDetailModel extends Equatable {
+  final int? id;
   final String? instituteName;
   final String? fieldOfStudy;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final int? yearOfPassing;
-  final double? gradePercentageCgpa; // Use double for numerical grades
-  final bool? isCurrent;
-  final List<String>? marksheetUrl;
-  final List<String>? certificateUrl;
+  final String? startDate;
+  final String? endDate;
+  final bool? isCurrentlyStudying;
+  final String? grade;
+  @JsonKey(name: 'verification_status')
   final VerificationStatus? verificationStatus;
 
   const EducationDetailModel({
+    this.id,
     this.instituteName,
     this.fieldOfStudy,
     this.startDate,
     this.endDate,
-    this.yearOfPassing,
-    this.gradePercentageCgpa,
-    this.isCurrent,
-    this.marksheetUrl,
-    this.certificateUrl,
+    this.isCurrentlyStudying,
+    this.grade,
     this.verificationStatus,
   });
 
   factory EducationDetailModel.fromJson(Map<String, dynamic> json) =>
       _$EducationDetailModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$EducationDetailModelToJson(this);
 
   @override
   List<Object?> get props => [
+        id,
         instituteName,
         fieldOfStudy,
         startDate,
         endDate,
-        yearOfPassing,
-        gradePercentageCgpa,
-        isCurrent,
-        marksheetUrl,
-        certificateUrl,
+        isCurrentlyStudying,
+        grade,
         verificationStatus,
       ];
+      
+  /// Create a copy with updated fields
+  EducationDetailModel copyWith({
+    int? id,
+    String? instituteName,
+    String? fieldOfStudy,
+    String? startDate,
+    String? endDate,
+    bool? isCurrentlyStudying,
+    String? grade,
+    VerificationStatus? verificationStatus,
+  }) {
+    return EducationDetailModel(
+      id: id ?? this.id,
+      instituteName: instituteName ?? this.instituteName,
+      fieldOfStudy: fieldOfStudy ?? this.fieldOfStudy,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isCurrentlyStudying: isCurrentlyStudying ?? this.isCurrentlyStudying,
+      grade: grade ?? this.grade,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Education details model (container for all education information)
+@JsonSerializable()
 class EducationDetailsModel extends Equatable {
-  final String? highestLevel; // Consider using EducationLevel enum if applicable
+  final String? highestLevel;
   final List<EducationDetailModel>? educationDetails;
 
   const EducationDetailsModel({
@@ -225,465 +363,378 @@ class EducationDetailsModel extends Equatable {
 
   factory EducationDetailsModel.fromJson(Map<String, dynamic> json) =>
       _$EducationDetailsModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$EducationDetailsModelToJson(this);
 
   @override
   List<Object?> get props => [highestLevel, educationDetails];
+  
+  /// Create a copy with updated fields
+  EducationDetailsModel copyWith({
+    String? highestLevel,
+    List<EducationDetailModel>? educationDetails,
+  }) {
+    return EducationDetailsModel(
+      highestLevel: highestLevel ?? this.highestLevel,
+      educationDetails: educationDetails ?? this.educationDetails,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Work experience model
+@JsonSerializable()
 class WorkExperienceModel extends Equatable {
+  final int? id;
   final String? companyName;
-  final String? designation;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final bool? isCurrent;
+  final String? position;
+  final String? location;
+  final String? startDate;
+  final String? endDate;
+  final bool? isCurrentlyWorking;
   final String? description;
-  final List<String>? experienceLetterUrl;
-  final List<String>? payslipUrls;
+  @JsonKey(name: 'verification_status')
+  final VerificationStatus? verificationStatus;
 
   const WorkExperienceModel({
+    this.id,
     this.companyName,
-    this.designation,
+    this.position,
+    this.location,
     this.startDate,
     this.endDate,
-    this.isCurrent,
+    this.isCurrentlyWorking,
     this.description,
-    this.experienceLetterUrl,
-    this.payslipUrls,
+    this.verificationStatus,
   });
 
   factory WorkExperienceModel.fromJson(Map<String, dynamic> json) =>
       _$WorkExperienceModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$WorkExperienceModelToJson(this);
 
   @override
   List<Object?> get props => [
+        id,
         companyName,
-        designation,
+        position,
+        location,
         startDate,
         endDate,
-        isCurrent,
+        isCurrentlyWorking,
         description,
-        experienceLetterUrl,
-        payslipUrls,
+        verificationStatus,
       ];
+      
+  /// Create a copy with updated fields
+  WorkExperienceModel copyWith({
+    int? id,
+    String? companyName,
+    String? position,
+    String? location,
+    String? startDate,
+    String? endDate,
+    bool? isCurrentlyWorking,
+    String? description,
+    VerificationStatus? verificationStatus,
+  }) {
+    return WorkExperienceModel(
+      id: id ?? this.id,
+      companyName: companyName ?? this.companyName,
+      position: position ?? this.position,
+      location: location ?? this.location,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isCurrentlyWorking: isCurrentlyWorking ?? this.isCurrentlyWorking,
+      description: description ?? this.description,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Skill model
+@JsonSerializable()
 class SkillModel extends Equatable {
-  final String? name;
-  final String? proficiencyLevel; // Consider using ProficiencyLevel enum
-  final String? experience; // e.g., "2 years", might need parsing
+  final int? id;
+  final String name;
+  final int? yearsOfExperience;
 
   const SkillModel({
-    this.name,
-    this.proficiencyLevel,
-    this.experience,
+    this.id,
+    required this.name,
+    this.yearsOfExperience,
   });
 
   factory SkillModel.fromJson(Map<String, dynamic> json) =>
       _$SkillModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$SkillModelToJson(this);
 
   @override
-  List<Object?> get props => [name, proficiencyLevel, experience];
+  List<Object?> get props => [id, name, yearsOfExperience];
+  
+  /// Create a copy with updated fields
+  SkillModel copyWith({
+    int? id,
+    String? name,
+    int? yearsOfExperience,
+  }) {
+    return SkillModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Certification model
+@JsonSerializable()
 class CertificationModel extends Equatable {
-  final String name;
+  final int? id;
+  final String? name;
   final String? issuingOrganization;
-  final DateTime? issueDate;
-  final DateTime? expiryDate;
+  final String? issueDate;
+  final String? expiryDate;
   final String? credentialId;
   final String? credentialUrl;
-  final String? certificateUrl;
+  @JsonKey(name: 'verification_status')
   final VerificationStatus? verificationStatus;
 
   const CertificationModel({
-    required this.name,
+    this.id,
+    this.name,
     this.issuingOrganization,
     this.issueDate,
     this.expiryDate,
     this.credentialId,
     this.credentialUrl,
-    this.certificateUrl,
     this.verificationStatus,
   });
 
   factory CertificationModel.fromJson(Map<String, dynamic> json) =>
       _$CertificationModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$CertificationModelToJson(this);
 
   @override
   List<Object?> get props => [
+        id,
         name,
         issuingOrganization,
         issueDate,
         expiryDate,
         credentialId,
         credentialUrl,
-        certificateUrl,
         verificationStatus,
       ];
+      
+  /// Create a copy with updated fields
+  CertificationModel copyWith({
+    int? id,
+    String? name,
+    String? issuingOrganization,
+    String? issueDate,
+    String? expiryDate,
+    String? credentialId,
+    String? credentialUrl,
+    VerificationStatus? verificationStatus,
+  }) {
+    return CertificationModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      issuingOrganization: issuingOrganization ?? this.issuingOrganization,
+      issueDate: issueDate ?? this.issueDate,
+      expiryDate: expiryDate ?? this.expiryDate,
+      credentialId: credentialId ?? this.credentialId,
+      credentialUrl: credentialUrl ?? this.credentialUrl,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Language proficiency model
+@JsonSerializable()
 class LanguageProficiencyModel extends Equatable {
-  final String language;
-  final ProficiencyLevel? spoken;
-  final ProficiencyLevel? written;
-  final ProficiencyLevel? reading;
+  final int? id;
+  final String? language;
+  @JsonKey(name: 'reading_proficiency')
+  final ProficiencyLevel? readingProficiency;
+  @JsonKey(name: 'writing_proficiency')
+  final ProficiencyLevel? writingProficiency;
+  @JsonKey(name: 'speaking_proficiency')
+  final ProficiencyLevel? speakingProficiency;
 
   const LanguageProficiencyModel({
-    required this.language,
-    this.spoken,
-    this.written,
-    this.reading,
+    this.id,
+    this.language,
+    this.readingProficiency,
+    this.writingProficiency,
+    this.speakingProficiency,
   });
 
   factory LanguageProficiencyModel.fromJson(Map<String, dynamic> json) =>
       _$LanguageProficiencyModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$LanguageProficiencyModelToJson(this);
 
   @override
-  List<Object?> get props => [language, spoken, written, reading];
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class ItiDetailModel extends Equatable {
-  final String? instituteName;
-  final String? trade;
-  final String? trainingDuration;
-  final int? passingYear;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final bool? isCurrent;
-  final List<String>? certificateUrls;
-  final String? grade;
-  final String? rollNumber;
-  final String? certificateNumber;
-  final VerificationStatus? verificationStatus;
-
-  const ItiDetailModel({
-    this.instituteName,
-    this.trade,
-    this.trainingDuration,
-    this.passingYear,
-    this.startDate,
-    this.endDate,
-    this.isCurrent,
-    this.certificateUrls,
-    this.grade,
-    this.rollNumber,
-    this.certificateNumber,
-    this.verificationStatus,
-  });
-
-  factory ItiDetailModel.fromJson(Map<String, dynamic> json) =>
-      _$ItiDetailModelFromJson(json);
-  Map<String, dynamic> toJson() => _$ItiDetailModelToJson(this);
-
-  @override
   List<Object?> get props => [
-        instituteName,
-        trade,
-        trainingDuration,
-        passingYear,
-        startDate,
-        endDate,
-        isCurrent,
-        certificateUrls,
-        grade,
-        rollNumber,
-        certificateNumber,
-        verificationStatus,
+        id,
+        language,
+        readingProficiency,
+        writingProficiency,
+        speakingProficiency,
       ];
+      
+  /// Create a copy with updated fields
+  LanguageProficiencyModel copyWith({
+    int? id,
+    String? language,
+    ProficiencyLevel? readingProficiency,
+    ProficiencyLevel? writingProficiency,
+    ProficiencyLevel? speakingProficiency,
+  }) {
+    return LanguageProficiencyModel(
+      id: id ?? this.id,
+      language: language ?? this.language,
+      readingProficiency: readingProficiency ?? this.readingProficiency,
+      writingProficiency: writingProficiency ?? this.writingProficiency,
+      speakingProficiency: speakingProficiency ?? this.speakingProficiency,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class IdentificationDocModel extends Equatable {
-  final String? docType;
-  final String? docNumber;
-  final String? name;
-  final List<String>? urls;
-
-  const IdentificationDocModel({
-    this.docType,
-    this.docNumber,
-    this.name,
-    this.urls,
-  });
-
-  factory IdentificationDocModel.fromJson(Map<String, dynamic> json) =>
-      _$IdentificationDocModelFromJson(json);
-  Map<String, dynamic> toJson() => _$IdentificationDocModelToJson(this);
-
-  @override
-  List<Object?> get props => [docType, docNumber, name, urls];
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class BankDetailModel extends Equatable {
-  final String? accountNumber;
-  final String? ifscCode;
-  final String? bankName;
-  final String? branchName;
-  final String? accountHolderName;
-
-  const BankDetailModel({
-    this.accountNumber,
-    this.ifscCode,
-    this.bankName,
-    this.branchName,
-    this.accountHolderName,
-  });
-
-  factory BankDetailModel.fromJson(Map<String, dynamic> json) =>
-      _$BankDetailModelFromJson(json);
-  Map<String, dynamic> toJson() => _$BankDetailModelToJson(this);
-
-  @override
-  List<Object?> get props =>
-      [accountNumber, ifscCode, bankName, branchName, accountHolderName];
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
+/// Job preferences model
+@JsonSerializable()
 class JobPreferencesModel extends Equatable {
-  final List<JobType>? jobTypes; // Use enum
-  final List<WorkLocationType>? workLocationTypes; // Use enum
-  final List<String>? jobRoles;
-  final List<String>? industries;
-  final String? minSalaryExpectation; // Consider using num/double if API provides
-  final String? maxSalaryExpectation; // Consider using num/double if API provides
-  final int? noticePeriodDays;
-  final bool? isWillingToRelocate;
-  final bool? isActivelyLooking;
-  final String? preferredJobLocations;
-  final String? currentLocation;
-  final String? totalExperienceYears; // Consider parsing to double/num
-  final String? currentMonthlySalary; // Consider using num/double if API provides
+  final List<String>? desiredJobTitles;
+  final List<String>? desiredLocations;
+  final int? minSalaryExpectation;
+  final String? employmentTypes; // Full-time, Part-time, Contract, etc.
+  final bool? isRemoteWork;
+  final bool? isRelocationPreferred;
+  final String? noticePeriod;
 
   const JobPreferencesModel({
-    this.jobTypes,
-    this.workLocationTypes,
-    this.jobRoles,
-    this.industries,
+    this.desiredJobTitles,
+    this.desiredLocations,
     this.minSalaryExpectation,
-    this.maxSalaryExpectation,
-    this.noticePeriodDays,
-    this.isWillingToRelocate,
-    this.isActivelyLooking,
-    this.preferredJobLocations,
-    this.currentLocation,
-    this.totalExperienceYears,
-    this.currentMonthlySalary,
+    this.employmentTypes,
+    this.isRemoteWork,
+    this.isRelocationPreferred,
+    this.noticePeriod,
   });
 
   factory JobPreferencesModel.fromJson(Map<String, dynamic> json) =>
       _$JobPreferencesModelFromJson(json);
+
   Map<String, dynamic> toJson() => _$JobPreferencesModelToJson(this);
 
   @override
   List<Object?> get props => [
-        jobTypes,
-        workLocationTypes,
-        jobRoles,
-        industries,
+        desiredJobTitles,
+        desiredLocations,
         minSalaryExpectation,
-        maxSalaryExpectation,
-        noticePeriodDays,
-        isWillingToRelocate,
-        isActivelyLooking,
-        preferredJobLocations,
-        currentLocation,
-        totalExperienceYears,
-        currentMonthlySalary,
+        employmentTypes,
+        isRemoteWork,
+        isRelocationPreferred,
+        noticePeriod,
       ];
+      
+  /// Create a copy with updated fields
+  JobPreferencesModel copyWith({
+    List<String>? desiredJobTitles,
+    List<String>? desiredLocations,
+    int? minSalaryExpectation,
+    String? employmentTypes,
+    bool? isRemoteWork,
+    bool? isRelocationPreferred,
+    String? noticePeriod,
+  }) {
+    return JobPreferencesModel(
+      desiredJobTitles: desiredJobTitles ?? this.desiredJobTitles,
+      desiredLocations: desiredLocations ?? this.desiredLocations,
+      minSalaryExpectation: minSalaryExpectation ?? this.minSalaryExpectation,
+      employmentTypes: employmentTypes ?? this.employmentTypes,
+      isRemoteWork: isRemoteWork ?? this.isRemoteWork,
+      isRelocationPreferred: isRelocationPreferred ?? this.isRelocationPreferred,
+      noticePeriod: noticePeriod ?? this.noticePeriod,
+    );
+  }
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class ReviewModel extends Equatable {
-  final String reviewerName;
-  final String? reviewerDesignation;
-  final String? reviewerCompany;
-  final double rating; // Use double for rating
-  final String? comments;
-  final DateTime? reviewDate;
-
-  const ReviewModel({
-    required this.reviewerName,
-    this.reviewerDesignation,
-    this.reviewerCompany,
-    required this.rating,
-    this.comments,
-    this.reviewDate,
-  });
-
-  factory ReviewModel.fromJson(Map<String, dynamic> json) =>
-      _$ReviewModelFromJson(json);
-  Map<String, dynamic> toJson() => _$ReviewModelToJson(this);
-
-  @override
-  List<Object?> get props => [
-        reviewerName,
-        reviewerDesignation,
-        reviewerCompany,
-        rating,
-        comments,
-        reviewDate,
-      ];
-}
-
-// Representing the Blob type simply as a Map
-// typedef CurrentProfileBlob = Map<String, dynamic>;
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class SeekerProfileBaseModel extends Equatable {
-  final PersonalDetailsModel? personalDetails;
-  final ContactDetailsModel? contactDetails;
-  final List<IdentificationDocModel>? identificationDocs;
-  final List<BankDetailModel>? bankDetails;
+/// API request model for creating a seeker profile
+@JsonSerializable()
+class SeekerProfileAPICreateRequestModel extends Equatable {
+  final PersonalDetailsModel personalDetails;
+  final ContactDetailsModel contactDetails;
   final EducationDetailsModel? educationDetails;
-  final List<WorkExperienceModel>? workExperiences;
-  final List<CertificationModel>? certifications;
-  final List<LanguageProficiencyModel>? languageProficiencies;
-  final JobPreferencesModel? jobPreferences;
-  final List<ItiDetailModel>? itiDetails;
+  final List<WorkExperienceModel>? workExperience;
   final List<SkillModel>? skills;
-  final double? assessmentScore;
-  final List<ReviewModel>? reviews;
-  final List<Map<String, dynamic>>? callMetadataHistory; // Using Map for Blob
-  final Map<String, dynamic>? currentProfile; // Using Map for Blob
+  final List<LanguageProficiencyModel>? languages;
+  final List<CertificationModel>? certifications;
+  final JobPreferencesModel? jobPreferences;
 
-  const SeekerProfileBaseModel({
-    this.personalDetails,
-    this.contactDetails,
-    this.identificationDocs,
-    this.bankDetails,
+  const SeekerProfileAPICreateRequestModel({
+    required this.personalDetails,
+    required this.contactDetails,
     this.educationDetails,
-    this.workExperiences,
-    this.certifications,
-    this.languageProficiencies,
-    this.jobPreferences,
-    this.itiDetails,
+    this.workExperience,
     this.skills,
-    this.assessmentScore,
-    this.reviews,
-    this.callMetadataHistory,
-    this.currentProfile,
+    this.languages,
+    this.certifications,
+    this.jobPreferences,
   });
+
+  factory SeekerProfileAPICreateRequestModel.fromJson(Map<String, dynamic> json) =>
+      _$SeekerProfileAPICreateRequestModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SeekerProfileAPICreateRequestModelToJson(this);
 
   @override
   List<Object?> get props => [
         personalDetails,
         contactDetails,
-        identificationDocs,
-        bankDetails,
         educationDetails,
-        workExperiences,
-        certifications,
-        languageProficiencies,
-        jobPreferences,
-        itiDetails,
+        workExperience,
         skills,
-        assessmentScore,
-        reviews,
-        callMetadataHistory,
-        currentProfile,
+        languages,
+        certifications,
+        jobPreferences,
       ];
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class SeekerProfileAPICreateRequestModel extends SeekerProfileBaseModel {
-  const SeekerProfileAPICreateRequestModel({
-    super.personalDetails,
-    super.contactDetails,
-    super.identificationDocs,
-    super.bankDetails,
-    super.educationDetails,
-    super.workExperiences,
-    super.certifications,
-    super.languageProficiencies,
-    super.jobPreferences,
-    super.itiDetails,
-    super.skills,
-    super.assessmentScore,
-    super.reviews,
-    super.callMetadataHistory,
-    super.currentProfile,
+/// API response model for profile operations
+@JsonSerializable()
+class APIResponseModel<T> extends Equatable {
+  final bool success;
+  final String? message;
+  final T? data;
+
+  const APIResponseModel({
+    required this.success,
+    this.message,
+    this.data,
   });
 
-  factory SeekerProfileAPICreateRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$SeekerProfileAPICreateRequestModelFromJson(json);
-  Map<String, dynamic> toJson() => _$SeekerProfileAPICreateRequestModelToJson(this);
-}
+  factory APIResponseModel.fromJson(
+    Map<String, dynamic> json,
+    T Function(Object? json) fromJsonT,
+  ) {
+    return APIResponseModel<T>(
+      success: json['success'] as bool,
+      message: json['message'] as String?,
+      data: json['data'] != null ? fromJsonT(json['data']) : null,
+    );
+  }
 
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class SeekerProfileAPIResponseModel extends SeekerProfileBaseModel {
-  final String id;
-  final String seekerId;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-
-  const SeekerProfileAPIResponseModel({
-    required this.id,
-    required this.seekerId,
-    this.createdAt,
-    this.updatedAt,
-    super.personalDetails,
-    super.contactDetails,
-    super.identificationDocs,
-    super.bankDetails,
-    super.educationDetails,
-    super.workExperiences,
-    super.certifications,
-    super.languageProficiencies,
-    super.jobPreferences,
-    super.itiDetails,
-    super.skills,
-    super.assessmentScore,
-    super.reviews,
-    super.callMetadataHistory,
-    super.currentProfile,
-  });
-
-  factory SeekerProfileAPIResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$SeekerProfileAPIResponseModelFromJson(json);
-  Map<String, dynamic> toJson() => _$SeekerProfileAPIResponseModelToJson(this);
+  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) {
+    return {
+      'success': success,
+      'message': message,
+      if (data != null) 'data': toJsonT(data as T),
+    };
+  }
 
   @override
-  List<Object?> get props => [
-        id,
-        seekerId,
-        createdAt,
-        updatedAt,
-        ...super.props // Include props from the base class
-      ];
-}
-
-@JsonSerializable(fieldRename: FieldRename.snake, includeIfNull: false)
-class SeekerProfileAPIUpdateRequestModel extends SeekerProfileBaseModel {
-  const SeekerProfileAPIUpdateRequestModel({
-    super.personalDetails,
-    super.contactDetails,
-    super.identificationDocs,
-    super.bankDetails,
-    super.educationDetails,
-    super.workExperiences,
-    super.certifications,
-    super.languageProficiencies,
-    super.jobPreferences,
-    super.itiDetails,
-    super.skills,
-    super.assessmentScore,
-    super.reviews,
-    super.callMetadataHistory,
-    super.currentProfile,
-  });
-
-  factory SeekerProfileAPIUpdateRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$SeekerProfileAPIUpdateRequestModelFromJson(json);
-  Map<String, dynamic> toJson() => _$SeekerProfileAPIUpdateRequestModelToJson(this);
+  List<Object?> get props => [success, message, data];
 }
